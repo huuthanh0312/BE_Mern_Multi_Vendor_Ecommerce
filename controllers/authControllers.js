@@ -32,7 +32,7 @@ class authControllers {
       }
     } catch (error) {
       // console.log(error.message)
-      responseReture(res, 500, { error: error.message })
+      responseReturn(res, 500, { error: error.message })
     }
   }
   //end method
@@ -48,7 +48,7 @@ class authControllers {
         console.log('Seller Info')
       }
     } catch (error) {
-      console.log(error, message)
+      console.log(error.message)
     }
   }
 }
