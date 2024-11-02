@@ -3,19 +3,19 @@ const { Schema, model } = require("mongoose");
 const adminSchema = new Schema({
   name: {
     type: String,
-    require: true,
+    required: true,
   },
   email: {
     type: String,
-    require: true,
+    required: true,
   },
   password: {
     type: String,
-    require: true,
+    required: true,
   },
   image: {
     type: String,
-    require: true,
+    required: true,
   },
   role: {
     type: String,
