@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken')
 
 module.exports.createToken = async (data) => {
   //create token admin 7 day sign in
