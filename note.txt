@@ -1,3 +1,19 @@
-npm i express bcrypt body-parser cloudinary cookie-parser cors dotenv formidable jsonwebtoken moment mongoose socket.io stripe uuid
+npm i express bcrypt body-parser cloudinary cookie-parser cors dotenv formidable@2.1.1 jsonwebtoken moment mongoose socket.io stripe uuid
 
 npm i nodemon -D
+
+express	Framework cho Node.js để xây dựng ứng dụng web và API. Cung cấp các phương thức và middleware dễ sử dụng.
+bcrypt	Thư viện để mã hóa và so sánh mật khẩu, bảo vệ thông tin người dùng.
+body-parser	Middleware để phân tích dữ liệu POST trong request. Giúp đọc dữ liệu từ req.body.
+cloudinary	Dịch vụ lưu trữ và xử lý hình ảnh/video trực tuyến. Thường được sử dụng để upload và quản lý media.
+cookie-parser	Middleware để phân tích cookie trong request, giúp dễ dàng truy cập và sử dụng cookie.
+cors	Middleware cho phép Cross-Origin Resource Sharing (CORS), cho phép client từ các domain khác truy cập API.
+dotenv	Thư viện để quản lý biến môi trường từ file .env. Giúp bảo mật thông tin nhạy cảm (như API keys).
+formidable@2.1.1	Thư viện để xử lý form với file upload, thường được sử dụng trong các ứng dụng web để tải lên tệp.
+jsonwebtoken	Thư viện để tạo và xác thực JSON Web Tokens (JWT), thường dùng để bảo vệ các route và xác thực người dùng.
+moment	Thư viện để xử lý ngày tháng, giúp định dạng và thao tác với thời gian một cách dễ dàng.
+mongoose	Thư viện ORM cho MongoDB, giúp quản lý kết nối và thao tác với cơ sở dữ liệu MongoDB dễ dàng hơn.
+socket.io	Thư viện cho việc giao tiếp thời gian thực giữa client và server qua WebSockets, thường dùng trong ứng dụng chat hoặc real-time updates.
+stripe	API cho việc xử lý thanh toán trực tuyến. Cung cấp các công cụ để tích hợp thanh toán vào ứng dụng.
+uuid	Thư viện để tạo UUID (Universally Unique Identifier), thường dùng để tạo các ID duy nhất cho các đối tượng.
+

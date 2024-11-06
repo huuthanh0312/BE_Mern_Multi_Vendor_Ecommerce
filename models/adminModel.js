@@ -21,5 +21,5 @@ const adminSchema = new Schema({
     type: String,
     default: 'admin',
   },
-})
+}, { timestamps: true })
 module.exports = model('admins', adminSchema)

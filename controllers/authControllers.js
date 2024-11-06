@@ -1,9 +1,9 @@
 const adminModel = require('../models/adminModel');
-const { responseReturn } = require('../utils/response');
 const bcrpty = require('bcrypt');
 const { createToken } = require('../utils/tokenCreate');
 const sellerModel = require('../models/sellerModel');
 const sellerCustomerModel = require('../models/chat/sellerCustomerModel');
+const { responseReturn } = require('../utils/response');
 
 class authControllers {
 
