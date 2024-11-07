@@ -17,10 +17,11 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json())
 app.use(cookieParser())
 
-
+app.get('/', (req, res) => res.send('My Backend'))
 app.use('/api', require('./routes/authRoutes'))
 app.use('/api', require('./routes/dashboard/categoryRoutes'))
-app.get('/', (req, res) => res.send('My Backend'))
+app.use('/api', require('./routes/dashboard/productRoutes'))
+
 
 const port = process.env.PORT || 8000
 dbConnect()
