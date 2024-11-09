@@ -47,7 +47,7 @@ class categoryControllers {
   //@desc  Fetch get category
   //@route POST /api/categories
   //@access private
-  getCategory = async (req, res) => {
+  getCategories = async (req, res) => {
     const { page, parPage, searchValue } = req.query
 
     try {
@@ -56,8 +56,8 @@ class categoryControllers {
         skipPage = parseInt(parPage) * (parseInt(page) - 1)
       }
       if (searchValue && page && parPage) {
-        const categories = await categoryModel.find({name: { $regex: `${searchValue}`, $options: 'i' }}).skip(skipPage).limit(parPage).sort({ createdAt: - 1 })
-        const totalCategory = await categoryModel.find({name: { $regex: `${searchValue}`, $options: 'i' }}).countDocuments
+        const categories = await categoryModel.find({ name: { $regex: `${searchValue}`, $options: 'i' } }).skip(skipPage).limit(parPage).sort({ createdAt: - 1 })
+        const totalCategory = await categoryModel.find({ name: { $regex: `${searchValue}`, $options: 'i' } }).countDocuments
         responseReturn(res, 200, { categories, totalCategory })
 
       } else if (searchValue == '' && page && parPage) {

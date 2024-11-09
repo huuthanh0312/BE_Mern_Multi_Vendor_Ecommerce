@@ -7,6 +7,6 @@ const router = require('express').Router()
 // Create	POST
 router.post('/categories', authMiddleware, categoryController.addCategory)
 //Retrieve All	GET
-router.get('/categories', authMiddleware, categoryController.getCategory)
+router.get('/categories', authMiddleware, categoryController.getCategories)
 
 module.exports = router

@@ -17,3 +17,68 @@ socket.io	Thư viện cho việc giao tiếp thời gian thực giữa client v�
 stripe	API cho việc xử lý thanh toán trực tuyến. Cung cấp các công cụ để tích hợp thanh toán vào ứng dụng.
 uuid	Thư viện để tạo UUID (Universally Unique Identifier), thường dùng để tạo các ID duy nhất cho các đối tượng.
 
+
+Trong RESTful API, các tên endpoint và phương thức HTTP cần được đặt theo chuẩn để dễ hiểu, thống nhất, và đúng với ngữ nghĩa. Dưới đây là một hướng dẫn cho việc đặt tên theo chuẩn RESTful API:
+
+1. Sử dụng danh từ số nhiều để biểu thị tài nguyên
+Sử dụng danh từ số nhiều cho các tài nguyên (resources), như products, categories, users, v.v.
+
+Ví dụ:
+
+/products: Lấy danh sách tất cả sản phẩm hoặc thêm sản phẩm mới.
+/products/{id}: Lấy, cập nhật hoặc xóa một sản phẩm cụ thể.
+2. Sử dụng phương thức HTTP để xác định hành động
+Dùng các phương thức HTTP để chỉ rõ hành động:
+
+GET: Lấy dữ liệu.
+POST: Tạo tài nguyên mới.
+PUT: Cập nhật toàn bộ tài nguyên.
+PATCH: Cập nhật một phần tài nguyên.
+DELETE: Xóa tài nguyên.
+3. Ví dụ cụ thể cho API sản phẩm (products)
+HTTP Method	Endpoint	Mô tả
+GET	/products	Lấy danh sách tất cả sản phẩm.
+POST	/products	Tạo một sản phẩm mới.
+GET	/products/{id}	Lấy thông tin sản phẩm với id cụ thể.
+PUT	/products/{id}	Cập nhật thông tin sản phẩm (toàn bộ).
+PATCH	/products/{id}	Cập nhật một phần thông tin sản phẩm.
+DELETE	/products/{id}	Xóa sản phẩm với id cụ thể.
+4. Xử lý các tài nguyên con (Nested Resources)
+Sử dụng nested resources khi một tài nguyên phụ thuộc vào tài nguyên chính.
+
+Ví dụ với subcategories của category:
+
+Lấy danh sách subcategories của một category: GET /categories/{categoryId}/subcategories
+Thêm mới một subcategory vào một category: POST /categories/{categoryId}/subcategories
+Xóa một subcategory: DELETE /categories/{categoryId}/subcategories/{subCategoryId}
+5. Áp dụng bộ lọc, tìm kiếm, phân trang bằng query parameters
+Sử dụng query parameters để thực hiện tìm kiếm, lọc, và phân trang:
+
+/products?search=phone&page=1&limit=10
+/categories?sort=name&order=asc
+6. Đặt tên cho các hành động cụ thể
+Nếu cần thực hiện hành động đặc biệt, thêm các endpoint rõ nghĩa, nhưng giữ dạng động từ ở mức tối thiểu:
+
+/products/{id}/publish (để đăng một sản phẩm)
+/products/{id}/archive (để lưu trữ sản phẩm)
+7. Ví dụ RESTful API cho sản phẩm và danh mục
+plaintext
+Copy code
+GET /products                      -> Lấy tất cả sản phẩm
+POST /products                     -> Tạo mới sản phẩm
+GET /products/{id}                 -> Lấy sản phẩm theo ID
+PUT /products/{id}                 -> Cập nhật sản phẩm theo ID
+DELETE /products/{id}              -> Xóa sản phẩm theo ID
+
+GET /categories                    -> Lấy tất cả danh mục
+POST /categories                   -> Tạo mới danh mục
+GET /categories/{id}               -> Lấy danh mục theo ID
+PUT /categories/{id}               -> Cập nhật danh mục theo ID
+DELETE /categories/{id}            -> Xóa danh mục theo ID
+
+GET /categories/{categoryId}/subcategories      -> Lấy tất cả subcategories của category
+POST /categories/{categoryId}/subcategories     -> Tạo subcategory trong category
+DELETE /categories/{categoryId}/subcategories/{subCategoryId} -> Xóa subcategory theo ID
+Tóm lại
+Đặt tên RESTful API rõ ràng, mô tả đúng tài nguyên, và phân biệt hành động bằng phương thức HTTP sẽ giúp API dễ hiểu và dễ bảo trì.
+

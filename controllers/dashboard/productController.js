@@ -28,7 +28,7 @@ class productControllers {
             images = [images];
           }
           //config cloudinary
-          await cloudinaryConfig();
+          await cloudinaryConfig()
           for (let i = 0; i < images.length; i++) {
             const result = await cloudinary.uploader.upload(images[i].filepath, { folder: 'products' })
             allImageUrl.push(result.url)
@@ -59,10 +59,10 @@ class productControllers {
   }
   //end method
 
-  //@desc  Fetch get category
-  //@route POST /api/categories
+  //@desc  Fetch get products
+  //@route get /api/products
   //@access private
-  getProduct = async (req, res) => {
+  getProducts = async (req, res) => {
     const { page, parPage, searchValue } = req.query
 
     try {
@@ -90,6 +90,89 @@ class productControllers {
     }
   }
   //end method
-}
 
+  //@desc  Fetch get product by id
+  //@route get /api/products/id
+  //@access private
+  getProduct = async (req, res) => {
+    const { productId } = req.params
+
+    try {
+      const product = await productModel.findById(productId)
+      //console.log(product)
+      responseReturn(res, 200, { product })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+    //end method
+  }
+
+  //@desc  Fetch add product
+  //@route PUT /api/produts
+  //@access private
+  updateProduct = async (req, res) => {
+    const { productId } = req.params
+    let { name, category, price, stock, discount, description, brand } = req.body
+    const slug = name.trim().toLowerCase().replace(/[/\s]+/g, '-').replace(/[^\w-]+/g, '')
+    try {
+      await productModel.findByIdAndUpdate(productId, { name, category, price, stock, discount, description, brand, slug })
+      const product = await productModel.findById(productId)
+      responseReturn(res, 200, { product, message: 'Product Updated Successfully' })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+
+  }
+  //end method
+
+
+  //@desc  Fetch update product image by Id
+  //@route PUT /api/product/:productId/image
+  //@access private
+  updateProductImage = async (req, res) => {
+    const { productId } = req.params
+
+    try {
+      // Đảm bảo parse form bằng async/await
+      const { fields, files } = await new Promise((resolve, reject) => {
+        const form = formidable({ multiples: true })
+        form.parse(req, (err, fields, files) => {
+          if (err) reject(err)
+          else resolve({ fields, files })
+        })
+      })
+
+      const { oldImage } = fields
+      const { newImage } = files
+
+      // Cấu hình cloudinary và upload ảnh mới
+      await cloudinaryConfig()
+      const result = await cloudinary.uploader.upload(newImage.filepath, { folder: 'products' })
+
+      if (!result) {
+        return responseReturn(res, 404, { error: 'Image upload failed' })
+      }
+
+      // Tìm sản phẩm và cập nhật ảnh trong cơ sở dữ liệu
+      const product = await productModel.findById(productId)
+      if (!product) {
+        return responseReturn(res, 404, { error: 'Product not found' })
+      }
+
+      const imageIndex = product.images.findIndex(img => img === oldImage)
+      if (imageIndex !== -1) {
+        product.images[imageIndex] = result.url
+      } else {
+        return responseReturn(res, 404, { error: 'Old image not found' })
+      }
+
+      await product.save()
+      responseReturn(res, 200, { product, message: 'Image updated successfully' })
+
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+
+}
 module.exports = new productControllers()
