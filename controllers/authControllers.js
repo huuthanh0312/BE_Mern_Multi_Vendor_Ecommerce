@@ -4,6 +4,9 @@ const { createToken } = require('../utils/tokenCreate');
 const sellerModel = require('../models/sellerModel');
 const sellerCustomerModel = require('../models/chat/sellerCustomerModel');
 const { responseReturn } = require('../utils/response');
+const cloudinary = require('cloudinary').v2
+const { cloudinaryConfig } = require('../utils/cloudinaryConfig');
+const formidable = require('formidable');
 
 class authControllers {
 
@@ -138,6 +141,60 @@ class authControllers {
       responseReturn(res, 500, { error: 'Internal Server Error' })
     }
   }
-}
 
+  //@desc  Fetch upload profile image
+  //@route get /api/profile-image-upload
+  //@access private middleware
+  uploadSellerProfileImage = async (req, res) => {
+    const { id } = req
+    try {
+      // Đảm bảo parse form bằng async/await
+      const { fields, files } = await new Promise((resolve, reject) => {
+        const form = formidable({ multiples: true })
+        form.parse(req, (err, fields, files) => {
+          if (err) reject(err)
+          else resolve({ fields, files })
+        })
+      })
+
+      const { image } = files
+
+      // Cấu hình cloudinary và upload ảnh mới
+      await cloudinaryConfig()
+      const result = await cloudinary.uploader.upload(image.filepath, { folder: 'profile' })
+
+      if (!result) {
+        return responseReturn(res, 404, { error: 'Image Upload Failed' })
+      }
+
+      // Tìm sản phẩm và cập nhật ảnh trong cơ sở dữ liệu
+      await sellerModel.findByIdAndUpdate(id, { image: result.url })
+      const userInfo = await sellerModel.findById(id)
+      responseReturn(res, 201, { userInfo, message: 'Profile Image Updated Successfully' })
+
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+
+  }
+
+  //@desc  Fetch Change profile seller info
+  //@route get /api/seller/profile/info
+  //@access private middleware
+  changeSellerInfo = async (req, res) => {
+    const { id } = req
+    const { division, district, shopName, sub_district } = req.body
+    try {
+      await sellerModel.findByIdAndUpdate(id, {
+        shopInfo: {
+          division, district, shopName, sub_district
+        }
+      })
+      const userInfo = await sellerModel.findById(id)
+      responseReturn(res, 201, { userInfo, message: 'Profile Info Updated Successfully' })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+}
 module.exports = new authControllers()

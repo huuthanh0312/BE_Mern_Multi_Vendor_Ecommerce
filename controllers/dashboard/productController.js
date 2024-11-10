@@ -156,18 +156,18 @@ class productControllers {
       // Tìm sản phẩm và cập nhật ảnh trong cơ sở dữ liệu
       const product = await productModel.findById(productId)
       if (!product) {
-        return responseReturn(res, 404, { error: 'Product not found' })
+        return responseReturn(res, 404, { error: 'Product Not Found' })
       }
 
       const imageIndex = product.images.findIndex(img => img === oldImage)
       if (imageIndex !== -1) {
         product.images[imageIndex] = result.url
       } else {
-        return responseReturn(res, 404, { error: 'Old image not found' })
+        return responseReturn(res, 404, { error: 'Old Image Not Found' })
       }
 
       await product.save()
-      responseReturn(res, 200, { product, message: 'Image updated successfully' })
+      responseReturn(res, 200, { product, message: 'Image Updated Successfully' })
 
     } catch (error) {
       responseReturn(res, 500, { error: error.message })
