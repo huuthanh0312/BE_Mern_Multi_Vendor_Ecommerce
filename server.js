@@ -21,6 +21,7 @@ app.get('/', (req, res) => res.send('My Backend'))
 app.use('/api', require('./routes/authRoutes'))
 app.use('/api', require('./routes/dashboard/categoryRoutes'))
 app.use('/api', require('./routes/dashboard/productRoutes'))
+app.use('/api', require('./routes/dashboard/sellerRoutes'))
 
 
 const port = process.env.PORT || 8000
