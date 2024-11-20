@@ -4,7 +4,7 @@ const cloudinary = require('cloudinary').v2
 const sellerModel = require('../../models/sellerModel');
 const { cloudinaryConfig } = require('../../utils/cloudinaryConfig');
 
-class sellerControllers {
+class sellerController {
 
   //@desc  Fetch get sellers
   //@route POST /api/sellers
@@ -74,4 +74,4 @@ class sellerControllers {
 
   }
 }
-module.exports = new sellerControllers()
+module.exports = new sellerController()

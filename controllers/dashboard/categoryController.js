@@ -4,7 +4,7 @@ const cloudinary = require('cloudinary').v2
 const categoryModel = require('../../models/categoryModel');
 const { cloudinaryConfig } = require('../../utils/cloudinaryConfig');
 
-class categoryControllers {
+class categoryController {
 
 
   //@desc  Fetch add category
@@ -78,4 +78,4 @@ class categoryControllers {
   //end method
 }
 
-module.exports = new categoryControllers()
+module.exports = new categoryController()

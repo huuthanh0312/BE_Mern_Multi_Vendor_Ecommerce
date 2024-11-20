@@ -5,58 +5,121 @@ const { cloudinaryConfig } = require('../../utils/cloudinaryConfig');
 const productModel = require('../../models/productModel');
 
 
-class productControllers {
+class productController {
 
   //@desc  Fetch add product
   //@route POST /api/produts
   //@access private
+  // addProduct = async (req, res) => {
+  //   const { id } = req
+  //   const form = formidable({ multiples: true })
+  //   form.parse(req, async (error, fields, files) => {
+  //     if (error) {
+  //       responseReturn(res, 404, { error: 'Add Product Error' })
+  //     } else {
+
+  //       let { name, category, price, stock, discount, description, brand, shopName } = fields
+  //       let { images } = files
+  //       const slug = name.trim().toLowerCase().replace(/[/\s]+/g, '-').replace(/[^\w-]+/g, '')
+
+  //       try {
+  //         const allImageUrl = []
+  //         if (!Array.isArray(images)) {
+  //           images = [images];
+  //         }
+  //         //config cloudinary
+  //         await cloudinaryConfig()
+  //         for (let i = 0; i < images.length; i++) {
+  //           const result = await cloudinary.uploader.upload(images[i].filepath, { folder: 'products' })
+  //           allImageUrl.push(result.url)
+  //         }
+
+  //         await productModel.create({
+  //           sellerId: id,
+  //           name,
+  //           slug,
+  //           category: category.trim(),
+  //           price: parseInt(price),
+  //           stock: parseInt(stock),
+  //           discount: parseInt(discount),
+  //           description: description.trim(),
+  //           brand: brand.trim(),
+  //           shopName,
+  //           images: allImageUrl,
+  //         })
+  //         responseReturn(res, 201, { message: "Product Add Successfully" })
+
+  //       } catch (error) {
+  //         responseReturn(res, 500, { error: error.message })
+  //       }
+
+  //     }
+  //   })
+
+  // }
   addProduct = async (req, res) => {
-    const { id } = req
-    const form = formidable({ multiples: true })
-    form.parse(req, async (error, fields, files) => {
-      if (error) {
-        responseReturn(res, 404, { error: 'Add Product Error' })
-      } else {
+  const { id } = req;
+  const form = formidable({ multiples: true });
 
-        let { name, category, price, stock, discount, description, brand, shopName } = fields
-        let { images } = files
-        const slug = name.trim().toLowerCase().replace(/[/\s]+/g, '-').replace(/[^\w-]+/g, '')
+  form.parse(req, async (error, fields, files) => {
+    if (error) {
+      return responseReturn(res, 400, { error: 'Form parsing error' });
+    }
 
-        try {
-          const allImageUrl = []
-          if (!Array.isArray(images)) {
-            images = [images];
-          }
-          //config cloudinary
-          await cloudinaryConfig()
-          for (let i = 0; i < images.length; i++) {
-            const result = await cloudinary.uploader.upload(images[i].filepath, { folder: 'products' })
-            allImageUrl.push(result.url)
-          }
+    const { name, category, price, stock, discount, description, brand, shopName } = fields;
+    let { images } = files;
 
-          await productModel.create({
-            sellerId: id,
-            name,
-            slug,
-            category: category.trim(),
-            price: parseInt(price),
-            stock: parseInt(stock),
-            discount: parseInt(discount),
-            description: description.trim(),
-            brand: brand.trim(),
-            shopName,
-            images: allImageUrl,
-          })
-          responseReturn(res, 201, { message: "Product Add Successfully" })
+    // Kiểm tra dữ liệu đầu vào
+    if (!name || !category || !price || !stock || !description || !brand || !shopName || !images) {
+      return responseReturn(res, 400, { error: 'All fields are required' });
+    }
 
-        } catch (error) {
-          responseReturn(res, 500, { error: error.message })
-        }
+    const slug = name.trim().toLowerCase()
+      .replace(/[\s/]+/g, '-') // Thay thế khoảng trắng hoặc dấu `/` bằng dấu `-`
+      .replace(/[^\w-]+/g, ''); // Loại bỏ ký tự đặc biệt
 
+    try {
+      const allImageUrl = [];
+      if (!Array.isArray(images)) {
+        images = [images]; // Chuyển thành mảng nếu chỉ có 1 ảnh
       }
-    })
 
-  }
+      // Config Cloudinary
+      await cloudinaryConfig();
+
+      // Upload đồng thời tất cả ảnh
+      const uploadPromises = images.map((image) =>
+        cloudinary.uploader.upload(image.filepath, { folder: 'products' })
+      );
+      const uploadResults = await Promise.all(uploadPromises);
+
+      // Lưu URL vào danh sách
+      uploadResults.forEach((result) => allImageUrl.push(result.url));
+
+      // Thêm sản phẩm vào cơ sở dữ liệu
+      await productModel.create({
+        sellerId: id,
+        name: name.trim(),
+        slug,
+        category: category.trim(),
+        price: parseFloat(price),
+        stock: parseInt(stock),
+        discount: parseInt(discount) || 0,
+        description: description.trim(),
+        brand: brand.trim(),
+        shopName: shopName.trim(),
+        images: allImageUrl,
+      });
+
+      responseReturn(res, 201, { message: "Product added successfully" });
+    } catch (error) {
+      // Xử lý lỗi khi thêm sản phẩm
+      console.error('Add product error:', error);
+      responseReturn(res, 500, { error: 'Server error: ' + error.message });
+    }
+  });
+};
+
   //end method
 
   //@desc  Fetch get products
@@ -175,4 +238,4 @@ class productControllers {
   }
 
 }
-module.exports = new productControllers()
+module.exports = new productController()
