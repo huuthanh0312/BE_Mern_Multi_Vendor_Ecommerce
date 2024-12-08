@@ -58,6 +58,7 @@ class queryProducts {
   //   return this
   // }
 
+  //handle pagination
   skip = () => {
     const pageNumber = parseInt(this.query.pageNumber) || 1; // Default to page 1
     const parPage = parseInt(this.query.parPage) || this.products.length; // Default to all products

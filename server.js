@@ -28,6 +28,9 @@ app.use(cookieParser())
 app.get('/', (req, res) => res.send('My Backend TH Shop'))
 //Client
 app.use('/api/home', require('./routes/home/homeRoutes'))
+app.use('/api', require('./routes/home/customerAuthRoutes'))
+app.use('/api', require('./routes/home/cartRoutes'))
+app.use('/api', require('./routes/home/orderRoutes'))
 
 
 

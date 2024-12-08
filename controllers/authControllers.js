@@ -1,12 +1,12 @@
-const adminModel = require('../models/adminModel');
-const bcrpty = require('bcrypt');
-const { createToken } = require('../utils/tokenCreate');
+const adminModel = require('../models/adminModel')
+const bcrpty = require('bcrypt')
+const { createToken } = require('../utils/tokenCreate')
 const sellerModel = require('../models/sellerModel');
-const sellerCustomerModel = require('../models/chat/sellerCustomerModel');
-const { responseReturn } = require('../utils/response');
+const sellerCustomerModel = require('../models/chat/sellerCustomerModel')
+const { responseReturn } = require('../utils/response')
 const cloudinary = require('cloudinary').v2
-const { cloudinaryConfig } = require('../utils/cloudinaryConfig');
-const formidable = require('formidable');
+const { cloudinaryConfig } = require('../utils/cloudinaryConfig')
+const formidable = require('formidable')
 
 class authControllers {
 
@@ -15,7 +15,7 @@ class authControllers {
   //@access private
   admin_login = async (req, res) => {
     const { email, password } = req.body;
-    console.log(req.body)
+    //console.log(req.body)
     try {
       const admin = await adminModel.findOne({ email }).select('+password')
       //console.log(admin)
@@ -52,12 +52,12 @@ class authControllers {
   //@access private
   seller_register = async (req, res) => {
     const { email, name, password } = req.body;
-    console.log(req.body)
+    //console.log(req.body)
     try {
       const getUser = await sellerModel.findOne({ email })
       //console.log(getUser)
       if (getUser) {
-        responseReturn(res, 404, { error: "Email Already Exit" })
+        return responseReturn(res, 404, { error: "Email Already Exit" })
 
       } else {
         const seller = await sellerModel.create({
@@ -92,7 +92,7 @@ class authControllers {
   //@access private
   seller_login = async (req, res) => {
     const { email, password } = req.body;
-    console.log(req.body)
+    //console.log(req.body)
     try {
       const seller = await sellerModel.findOne({ email }).select('+password')
       //console.log(seller)

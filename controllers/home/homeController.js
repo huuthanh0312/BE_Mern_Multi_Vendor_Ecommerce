@@ -96,15 +96,13 @@ class homeController {
   //@route get /api/home/products/query
   //@access private
   queryProducts = async (req, res) => {
-    const parPage = 6
+    const parPage = 12
     req.query.parPage = parPage
     try {
       const products = await productModel.find({}).sort({ createdAt: -1 })   // 1 for asc -1 if for Desc
-      console.log(req.query)
+      //console.log(req.query)
       const totalProduct = new queryProducts(products, req.query).categoryQuery().ratingQuery().priceQuery().searchQuery().sortByPrice().countProducts()
       const result = new queryProducts(products, req.query).categoryQuery().ratingQuery().priceQuery().searchQuery().sortByPrice().skip().limit().getProducts()
-      //console.log(totalProduct)
-      //console.log(result)
       responseReturn(res, 200, { products: result, totalProduct, parPage })
     } catch (error) {
       responseReturn(res, 500, { error: error.message })
