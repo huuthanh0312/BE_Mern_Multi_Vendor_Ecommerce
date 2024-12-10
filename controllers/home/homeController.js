@@ -1,10 +1,10 @@
-const formidable = require('formidable')
+const moment = require('moment')
 const { responseReturn } = require('../../utils/response')
-const cloudinary = require('cloudinary').v2
 const categoryModel = require('../../models/categoryModel')
 const productModel = require('../../models/productModel')
-const { cloudinaryConfig } = require('../../utils/cloudinaryConfig')
 const queryProducts = require('../../utils/queryProducts')
+const reviewModel = require('../../models/reviewModel')
+const { mongo: { ObjectId } } = require('mongoose')
 
 class homeController {
   //formate product convert array [1,2,3], [4,5,6]
@@ -144,7 +144,7 @@ class homeController {
               $eq: product.sellerId
             }
           }]
-        })
+        }).limit(8).sort({ createdAt: -1 })
         responseReturn(res, 200, { product, moreProducts, relatedProducts })
       } else {
         responseReturn(res, 404, { error: 'Can not find product!' })
@@ -158,6 +158,91 @@ class homeController {
   }
   //end method
 
+  //@desc  Fetch customer product details review
+  //@route POST /api/home/customers/review
+  //@access private
+  customerReview = async (req, res) => {
+    const { name, review, rating, productId } = req.body
+    try {
+      await reviewModel.create({
+        productId, name, rating, review, date: moment(Date.now()).format('LL')
+      })
+
+      let rat = 0
+      const reviews = await reviewModel.find({ productId })
+      for (let i = 0; i < reviews.length; i++) {
+        rat = rat + reviews[i].rating
+      }
+
+      let productRating = 0
+      if (reviews.length > 0) {
+        productRating = (rat / reviews.length).toFixed(1)
+      }
+
+      await productModel.findByIdAndUpdate(productId, { rating: productRating })
+      responseReturn(res, 201, { message: 'Review Added Successfully' })
+
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
+
+  //@desc  Fetch customer product details review
+  //@route GET /api/home/customers/reviews/:productid?pageNumber=
+  //@access private
+  getReviews = async (req, res) => {
+    const { productId } = req.params
+    let { pageNumber } = req.query
+    //console.log(productId)
+    //console.log(pageNumber)
+    pageNumber = parseInt(pageNumber)
+    const limit = 5
+    const skipPage = limit * (pageNumber - 1)  // trang thoat
+    try {
+      const getRating = await reviewModel.aggregate([
+        {
+          $match: {
+            productId: new ObjectId(productId), // Lọc theo productId
+            rating: { $exists: true, $not: { $size: 0 } } // Lọc review có rating không rỗng
+          }
+        },
+        {
+          $unwind: "$rating" // Tách từng phần tử trong mảng rating
+        },
+        {
+          $group: {
+            _id: "$rating", // Nhóm theo từng giá trị rating
+            count: { $sum: 1 } // Đếm số lượng mỗi giá trị
+          }
+        },
+        {
+          $sort: { _id: 1 } // Sắp xếp kết quả theo giá trị rating (tăng dần)
+        }
+      ])
+      // count rating by review
+      let ratingReview = [{ rating: 5, sum: 0 }, { rating: 4, sum: 0 }, { rating: 3, sum: 0 }, { rating: 2, sum: 0 }, { rating: 1, sum: 0 }]
+      for (let i = 0; i < ratingReview.length; i++) {
+        for (let j = 0; j < getRating.length; j++) {
+          if (ratingReview[i].rating === getRating[j]._id) {
+            ratingReview[i].sum = getRating[j].count
+            break
+          }
+        }
+      }
+
+      const getAllReviews = await reviewModel.find({ productId })
+      const reviews = await reviewModel.find({ productId }).skip(skipPage).limit(5).sort({ createdAt: -1 })
+
+      //console.log(reviews, getAllReviews.length, ratingReview)
+      responseReturn(res, 201, { reviews, totalReview: getAllReviews.length, ratingReview })
+
+
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
 }
 
 

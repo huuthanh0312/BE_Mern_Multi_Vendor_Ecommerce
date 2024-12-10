@@ -30,4 +30,4 @@ const customerOrderSchema = new Schema({
     required: true,
   }
 }, { timestamps: true })
-module.exports = model('customerOrders', customerOrderSchema)
+module.exports = model('customer_Orders', customerOrderSchema)

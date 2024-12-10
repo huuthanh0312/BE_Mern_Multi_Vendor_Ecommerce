@@ -34,4 +34,4 @@ const authOrderSchema = new Schema({
     required: true,
   }
 }, { timestamps: true })
-module.exports = model('authOrders', authOrderSchema)
+module.exports = model('auth_Orders', authOrderSchema)

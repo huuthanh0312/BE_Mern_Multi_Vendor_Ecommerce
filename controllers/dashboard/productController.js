@@ -58,67 +58,72 @@ class productController {
 
   // }
   addProduct = async (req, res) => {
-  const { id } = req;
-  const form = formidable({ multiples: true });
+    const { id } = req;
+    const form = formidable({ multiples: true });
 
-  form.parse(req, async (error, fields, files) => {
-    if (error) {
-      return responseReturn(res, 400, { error: 'Form parsing error' });
-    }
-
-    const { name, category, price, stock, discount, description, brand, shopName } = fields;
-    let { images } = files;
-
-    // Kiểm tra dữ liệu đầu vào
-    if (!name || !category || !price || !stock || !description || !brand || !shopName || !images) {
-      return responseReturn(res, 400, { error: 'All fields are required' });
-    }
-
-    const slug = name.trim().toLowerCase()
-      .replace(/[\s/]+/g, '-') // Thay thế khoảng trắng hoặc dấu `/` bằng dấu `-`
-      .replace(/[^\w-]+/g, ''); // Loại bỏ ký tự đặc biệt
-
-    try {
-      const allImageUrl = [];
-      if (!Array.isArray(images)) {
-        images = [images]; // Chuyển thành mảng nếu chỉ có 1 ảnh
+    form.parse(req, async (error, fields, files) => {
+      if (error) {
+        return responseReturn(res, 400, { error: 'Form parsing error' });
       }
 
-      // Config Cloudinary
-      await cloudinaryConfig();
+      const { name, category, price, stock, discount, description, brand, shopName } = fields;
+      let { images } = files;
 
-      // Upload đồng thời tất cả ảnh
-      const uploadPromises = images.map((image) =>
-        cloudinary.uploader.upload(image.filepath, { folder: 'products' })
-      );
-      const uploadResults = await Promise.all(uploadPromises);
+      // Kiểm tra dữ liệu đầu vào
+      if (!name || !category || !price || !stock || !description || !brand || !shopName || !images) {
+        return responseReturn(res, 400, { error: 'All fields are required' });
+      }
 
-      // Lưu URL vào danh sách
-      uploadResults.forEach((result) => allImageUrl.push(result.url));
+      const uniqueSlug = name
+        .trim()
+        .toLowerCase()
+        .replace(/[/\s]+/g, '-') // Thay thế khoảng trắng và dấu "/" bằng "-"
+        .replace(/[^\w-]+/g, ''); // Loại bỏ ký tự đặc biệt
 
-      // Thêm sản phẩm vào cơ sở dữ liệu
-      await productModel.create({
-        sellerId: id,
-        name: name.trim(),
-        slug,
-        category: category.trim(),
-        price: parseFloat(price),
-        stock: parseInt(stock),
-        discount: parseInt(discount) || 0,
-        description: description.trim(),
-        brand: brand.trim(),
-        shopName: shopName.trim(),
-        images: allImageUrl,
-      });
+      const randomNumber = Math.floor(1000000 + Math.random() * 9999999999); // Tạo số ngẫu nhiên từ 1000000-99999999
+      const slug = `${uniqueSlug}-${randomNumber}`
 
-      responseReturn(res, 201, { message: "Product added successfully" });
-    } catch (error) {
-      // Xử lý lỗi khi thêm sản phẩm
-      console.error('Add product error:', error);
-      responseReturn(res, 500, { error: 'Server error: ' + error.message });
-    }
-  });
-};
+      try {
+        const allImageUrl = [];
+        if (!Array.isArray(images)) {
+          images = [images]; // Chuyển thành mảng nếu chỉ có 1 ảnh
+        }
+
+        // Config Cloudinary
+        await cloudinaryConfig();
+
+        // Upload đồng thời tất cả ảnh
+        const uploadPromises = images.map((image) =>
+          cloudinary.uploader.upload(image.filepath, { folder: 'products' })
+        );
+        const uploadResults = await Promise.all(uploadPromises);
+
+        // Lưu URL vào danh sách
+        uploadResults.forEach((result) => allImageUrl.push(result.url));
+
+        // Thêm sản phẩm vào cơ sở dữ liệu
+        await productModel.create({
+          sellerId: id,
+          name: name.trim(),
+          slug,
+          category: category.trim(),
+          price: parseFloat(price),
+          stock: parseInt(stock),
+          discount: parseInt(discount) || 0,
+          description: description.trim(),
+          brand: brand.trim(),
+          shopName: shopName.trim(),
+          images: allImageUrl,
+        });
+
+        responseReturn(res, 201, { message: "Product added successfully" });
+      } catch (error) {
+        // Xử lý lỗi khi thêm sản phẩm
+        console.error('Add product error:', error);
+        responseReturn(res, 500, { error: 'Server error: ' + error.message });
+      }
+    });
+  };
 
   //end method
 
@@ -176,7 +181,14 @@ class productController {
   updateProduct = async (req, res) => {
     const { productId } = req.params
     let { name, category, price, stock, discount, description, brand } = req.body
-    const slug = name.trim().toLowerCase().replace(/[/\s]+/g, '-').replace(/[^\w-]+/g, '')
+    const uniqueSlug = name
+      .trim()
+      .toLowerCase()
+      .replace(/[/\s]+/g, '-') // Thay thế khoảng trắng và dấu "/" bằng "-"
+      .replace(/[^\w-]+/g, ''); // Loại bỏ ký tự đặc biệt
+
+    const randomNumber = Math.floor(1000000 + Math.random() * 9999999999); // Tạo số ngẫu nhiên từ 1000000-99999999
+    const slug = `${uniqueSlug}-${randomNumber}`
     try {
       await productModel.findByIdAndUpdate(productId, { name, category, price, stock, discount, description, brand, slug })
       const product = await productModel.findById(productId)

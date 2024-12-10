@@ -19,5 +19,11 @@ router.get('/products/query', homeController.queryProducts)
 // Product Details by slug
 router.get('/products/details/:slug', homeController.productDetails)
 
+//Fetch customer product details add review
+router.post('/customers/review', homeController.customerReview)
+
+//Fetch customer product details get reviews
+router.get('/customers/reviews/:productId', homeController.getReviews)
+
 
 module.exports = router

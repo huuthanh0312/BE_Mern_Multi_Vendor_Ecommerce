@@ -3,9 +3,7 @@ const { responseReturn } = require('../../utils/response')
 const cloudinary = require('cloudinary').v2
 const { cloudinaryConfig } = require('../../utils/cloudinaryConfig')
 const cartModel = require('../../models/cartModel')
-const {
-  mongo: { ObjectId }
-} = require('mongoose')
+const { mongo: { ObjectId } } = require('mongoose')
 const wishlistModel = require('../../models/wishlistModel')
 
 class cartController {
@@ -75,7 +73,7 @@ class cartController {
         }
       }
       ])
-      console.log(cartProducts)
+      //console.log(cartProducts)
 
       let buy_product_item = 0 //items product by cart
       let calculatePrice = 0 // items price
