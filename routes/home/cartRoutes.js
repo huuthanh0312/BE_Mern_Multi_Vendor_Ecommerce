@@ -20,6 +20,16 @@ router.put('/home/cart/quantity-increase/:cartId', cartController.quantityIncrea
 // Cart Product Quantity Decrease
 router.put('/home/cart/quantity-decrease/:cartId', cartController.quantityDecrease)
 
+// Wishlist
+// Add To Wishlist
+router.post('/home/products/wishlist', customerAuthMiddleware, cartController.addToWishlist)
+
+//Get Wishlist Products
+router.get('/home/products/wishlist/:userId', customerAuthMiddleware, cartController.getWishlistProducts)
+
+//Remove Wishlist Products
+router.delete('/home/products/wishlist/:wishlistId', customerAuthMiddleware, cartController.removeWishlistProduct)
+
 
 
 

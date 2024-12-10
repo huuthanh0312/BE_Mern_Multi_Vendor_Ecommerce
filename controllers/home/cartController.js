@@ -6,6 +6,7 @@ const cartModel = require('../../models/cartModel')
 const {
   mongo: { ObjectId }
 } = require('mongoose')
+const wishlistModel = require('../../models/wishlistModel')
 
 class cartController {
   //@desc  Fetch to cart add product
@@ -18,19 +19,13 @@ class cartController {
       const product = await cartModel.findOne({
         $and: [
           {
-            productId: {
-              $eq: productId
-            }
+            productId: { $eq: productId }
           },
           {
-            userId: {
-              $eq: userId
-            }
+            userId: { $eq: userId }
           },
           {
-            quantity: {
-              $eq: quantity
-            }
+            quantity: { $eq: quantity }
           }
         ]
       })
@@ -61,24 +56,26 @@ class cartController {
       return res.status(400).json({ message: 'Invalid userId' })
     }
     try {
-      const cartProducts = await cartModel.aggregate([
-        {
-          $match: {
-            userId: {
-              $eq: new ObjectId(userId)
-            }
-          }
-        },
-        {
-          $lookup: {
-            from: 'products',
-            localField: 'productId',
-            foreignField: '_id',
-            as: 'products'
+      const cartProducts = await cartModel.aggregate([{
+        $match: {
+          userId: {
+            $eq: new ObjectId(userId)
           }
         }
+      },
+      {
+        $unwind: "$productId" // Dùng $unwind nếu productId là mảng
+      },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'productId',
+          foreignField: "_id",
+          as: 'products'
+        }
+      }
       ])
-      //console.log(cartProducts)
+      console.log(cartProducts)
 
       let buy_product_item = 0 //items product by cart
       let calculatePrice = 0 // items price
@@ -87,20 +84,21 @@ class cartController {
       // check count product is out of stock
       //const outOfStockProducts = cartProducts.filter((p) => p.products[0].stock < p.quantity) // out of stock product
       // Filter out-of-stock products
-      const outOfStockProducts = cartProducts.filter((p) => p.products.length > 0 && p.products[0].stock < p.quantity)
+      const outOfStockProducts = cartProducts
+        .filter((p) => p.products[0]?.stock < p.quantity)
         .map((p) => ({
           _id: p._id,
           quantity: p.quantity,
-          productInfo: p.products[0], // Ensure detailed product info is included
-        }));
-
+          productInfo: p.products[0] // Ensure detailed product info is included
+        }))
+      // console.log(outOfStockProducts)
       for (let i = 0; i < outOfStockProducts.length; i++) {
         cart_product_count += outOfStockProducts[i].quantity
       }
       //console.log(cart_product_count)
 
       // check count product is stock
-      const stockProduct = cartProducts.filter((p) => p.products[0].stock >= p.quantity)
+      const stockProduct = cartProducts.filter((p) => p.products[0]?.stock >= p.quantity)
 
       for (let i = 0; i < stockProduct.length; i++) {
         const { quantity } = stockProduct[i]
@@ -178,7 +176,6 @@ class cartController {
   }
   //end method
 
-
   //@desc  Fetch to cart delete product
   //@route Delete /api/home/cart/delete-product
   //@access private
@@ -188,13 +185,11 @@ class cartController {
     try {
       await cartModel.findByIdAndDelete(cartId)
       responseReturn(res, 200, { message: 'Product Remove Successfully' })
-
     } catch (error) {
       responseReturn(res, 500, { error: error.message })
     }
   }
   //end method
-
 
   //@desc  Fetch  Cart Product Quantity Increase
   //@route PUT /api/home/cart/quantity-increase
@@ -206,11 +201,10 @@ class cartController {
       const product = await cartModel.findById(cartId)
       if (!product) {
         // Return a 404 error if the product does not exist
-        return responseReturn(res, 404, { message: 'Product not found' });
+        return responseReturn(res, 404, { message: 'Product not found' })
       }
       await cartModel.findByIdAndUpdate(cartId, { quantity: product.quantity + 1 })
       responseReturn(res, 200, { message: 'Quantity Updated Successfully' })
-
     } catch (error) {
       responseReturn(res, 500, { error: error.message })
     }
@@ -227,11 +221,58 @@ class cartController {
       const product = await cartModel.findById(cartId)
       if (!product) {
         // Return a 404 error if the product does not exist
-        return responseReturn(res, 404, { message: 'Product not found' });
+        return responseReturn(res, 404, { message: 'Product not found' })
       }
       await cartModel.findByIdAndUpdate(cartId, { quantity: product.quantity - 1 })
       responseReturn(res, 200, { message: 'Quantity Updated Successfully' })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
 
+  //@desc  Fetch to wishlist add product
+  //@route POST /api/home/products/wishlist
+  //@access private
+  addToWishlist = async (req, res) => {
+    const { userId, productId, name, price, discount, rating, slug, image } = req.body
+
+    try {
+      const product = await wishlistModel.findOne({ slug })
+      if (product) {
+        responseReturn(res, 404, { error: 'Product Already Add To Wishlist' })
+      } else {
+        const product = await wishlistModel.create(req.body)
+        responseReturn(res, 201, { product, message: 'Product Added To Wishlist Successfully' })
+      }
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
+
+  //@desc  Fetch to wishlist get product
+  //@route GET /api/home/product/wishlist/:userId
+  //@access private
+  getWishlistProducts = async (req, res) => {
+    const { userId } = req.params
+    try {
+      const wishlists = await wishlistModel.find({ userId })
+      responseReturn(res, 200, { wishlists, wishlist_count: wishlists.length })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
+
+  //@desc  Fetch to wishlist remove
+  //@route DELETE /api/home/product/wishlist/:wishlistId
+  //@access private
+  removeWishlistProduct = async (req, res) => {
+    const { wishlistId } = req.params
+    try {
+      await wishlistModel.findByIdAndDelete(wishlistId)
+      responseReturn(res, 200, { wishlistId, message: ' Wishlist Product Remove Successfully' })
     } catch (error) {
       responseReturn(res, 500, { error: error.message })
     }

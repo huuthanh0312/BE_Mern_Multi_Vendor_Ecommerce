@@ -112,7 +112,51 @@ class homeController {
   //end method
 
 
+  //@desc  Fetch get product details by slug
+  //@route get /api/home/products/details/:slug
+  //@access private
+  productDetails = async (req, res) => {
+    const { slug } = req.params
+    try {
+      const product = await productModel.findOne({ slug })
+      //console.log(product)
+      if (product) {
+        //List product, not product details
+        const relatedProducts = await productModel.find({
+          $and: [{
+            _id: {
+              $ne: product.id
+            }
+          }, {
+            category: {
+              $eq: product.category
+            }
+          }]
+        }).limit(12)
+        //List product, not product details
+        const moreProducts = await productModel.find({
+          $and: [{
+            _id: {
+              $ne: product.id
+            }
+          }, {
+            sellerId: {
+              $eq: product.sellerId
+            }
+          }]
+        })
+        responseReturn(res, 200, { product, moreProducts, relatedProducts })
+      } else {
+        responseReturn(res, 404, { error: 'Can not find product!' })
+      }
 
+
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+
+  }
+  //end method
 
 }
 
