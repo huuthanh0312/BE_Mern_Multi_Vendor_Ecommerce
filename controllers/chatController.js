@@ -7,9 +7,10 @@ const sellerModel = require('../models/sellerModel')
 const customerModel = require('../models/customerModel')
 const sellerCustomerModel = require('../models/chat/sellerCustomerModel')
 const sellerCustomerMessageModel = require('../models/chat/sellerCustomerMessageModel')
+const adminSellerMessageModel = require('../models/chat/adminSellerMessageModel')
 
 class chatController {
-  //Controler Chat By Customers
+  ///////// Controler Chat By Customers ///////////
 
   //@desc  Fetch add customer <=> seller by cusytomer
   //@route POST /api/home/chat/customers/add-friend
@@ -201,10 +202,10 @@ class chatController {
   }
   //end method
 
-  // Controler Chat Sellers
+  ////////// Controler Chat Sellers  ///////////
 
-  //@desc  Fetch add customer <=> seller by sellers
-  //@route POST /api/home/chat/sellers/get-customer/:sellerId
+  //@desc Get All Customers by Seller
+  //@route GET /api/chat/sellers/get-customer/:sellerId
   //@access private
   getCustomersBySeller = async (req, res) => {
     const { sellerId } = req.params
@@ -223,8 +224,8 @@ class chatController {
   }
   //end method
 
-  //@desc  Fetch add customer <=> seller by cusytomer
-  //@route POST /api/home/chat/customers/add-friend
+  //@desc Get Customer By Id For Seller
+  //@route GET /api/chat/sellers/add-friend
   //@access private
   getCustomerMessagesBySeller = async (req, res) => {
     const { customerId } = req.params
@@ -270,8 +271,8 @@ class chatController {
   }
   //end method
 
-  //@desc  Fetch add customer <=> seller for customer
-  //@route POST /api/home/chat/customers/send-message-to-seller
+  //@desc Seller Send message to Customer
+  //@route POST /api/chat/sellers/send-message-to-seller
   //@access private
   sellerSendMessageToCustomer = async (req, res) => {
     const { senderId, name, receiverId, message } = req.body
@@ -332,6 +333,156 @@ class chatController {
 
       await sellerCustomerModel.updateOne({ myId: receiverId }, { myFriends: myFriendsToCustomer })
 
+      responseReturn(res, 201, { messages: messageSend })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
+
+  //// Seller vs Admin ////
+
+  //@desc Seller Send message to Admin
+  //@route POST /api/chat/sellers/send-message-to-seller
+  //@access private
+  sellerSendMessageToAdmin = async (req, res) => {
+    const { senderId, senderName, receiverId, message } = req.body
+    //console.log(sellerId)
+    try {
+      const messageSend = await adminSellerMessageModel.create({
+        senderId,
+        senderName,
+        receiverId,
+        message
+      })
+      responseReturn(res, 201, { messages: messageSend })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
+
+  //@desc Get Customer By Id For Seller
+  //@route GET /api/chat/sellers/add-friend
+  //@access private
+  getAdminMessagesBySeller = async (req, res) => {
+    const receiverId = ''
+    const { id } = req
+    //console.log(id)
+    try {
+      // get messages seller <=> customer
+      const admin_seller_messages = await adminSellerMessageModel.find({
+        $or: [
+          {
+            $and: [
+              {
+                receiverId: { $eq: receiverId }
+              },
+              {
+                senderId: {
+                  $eq: id
+                }
+              }
+            ]
+          },
+          {
+            $and: [
+              {
+                receiverId: { $eq: id }
+              },
+              {
+                senderId: {
+                  $eq: receiverId
+                }
+              }
+            ]
+          }
+        ]
+      })
+      //console.log(admin_seller_messages)
+      responseReturn(res, 200, { admin_seller_messages })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
+
+  /////////// Controler Chat Admin   ///////////
+
+  //@desc Seller add connect Admin
+  //@route GET /api/home/chat/admins/get-sellers/:adminId
+  //@access private
+  getSellersByAdmin = async (req, res) => {
+    try {
+      const sellers = await sellerModel.find({})
+      //console.log(data)
+      responseReturn(res, 200, { sellers })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
+
+  //@desc Get seller By Id For Admin
+  //@route GET /api//chat/admins/get-seller-messages/:sellerId
+  //@access private
+  getSellerMessagesByAdmin = async (req, res) => {
+    const { sellerId } = req.params
+    const id = ''
+    //console.log(id)
+    try {
+      // get messages seller <=> customer
+      const admin_seller_messages = await adminSellerMessageModel.find({
+        $or: [
+          {
+            $and: [
+              {
+                receiverId: { $eq: sellerId }
+              },
+              {
+                senderId: {
+                  $eq: id
+                }
+              }
+            ]
+          },
+          {
+            $and: [
+              {
+                receiverId: { $eq: id }
+              },
+              {
+                senderId: {
+                  $eq: sellerId
+                }
+              }
+            ]
+          }
+        ]
+      })
+
+      const currentSeller = await sellerModel.findById(sellerId)
+      //console.log(seller_customer_messages)
+      responseReturn(res, 200, { currentSeller, admin_seller_messages })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
+
+  //@desc Seller send message to Admin
+  //@route POST /api//chat/admins/send-message-to-seller
+  //@access private
+  adminSendMessageToSeller = async (req, res) => {
+    const { senderId, senderName, receiverId, message } = req.body
+    //console.log(req.body)
+    try {
+      const messageSend = await adminSellerMessageModel.create({
+        senderId: senderId,
+        senderName: senderName,
+        receiverId: receiverId,
+        message
+      })
       responseReturn(res, 201, { messages: messageSend })
     } catch (error) {
       responseReturn(res, 500, { error: error.message })

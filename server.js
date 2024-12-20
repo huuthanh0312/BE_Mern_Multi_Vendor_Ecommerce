@@ -29,7 +29,7 @@ app.use(cors(corsOptions))
 /// Danh sách lưu trữ khách hàng, người bán và quản trị viên đang kết nối
 var allCustomers = []
 var allSellers = []
-var allAdmins = []
+let admin = {}
 
 // Thêm khách hàng mới vào danh sách nếu chưa tồn tại
 const addUser = (customerId, socketId, userInfo) => {
@@ -47,14 +47,6 @@ const addSeller = (sellerId, socketId, userInfo) => {
   }
 }
 
-// Thêm admin mới vào danh sách nếu chưa tồn tại
-const addAdmin = (adminId, socketId, userInfo) => {
-  const checkAdmin = allAdmins.some((u) => u.adminId === adminId)
-  if (!checkAdmin) {
-    allAdmins.push({ adminId, socketId, userInfo })
-  }
-}
-
 // Tìm khách hàng dựa trên ID
 const findCustomer = (customerId) => {
   return allCustomers.find((c) => c.customerId === customerId)
@@ -68,7 +60,6 @@ const findSeller = (sellerId) => {
 const remove = (socketId) => {
   allCustomers = allCustomers.filter((c) => c.socketId !== socketId)
   allSellers = allSellers.filter((s) => s.socketId !== socketId)
-  allAdmins = allAdmins.filter((a) => a.socketId !== socketId)
 }
 
 // Kết nối socket server đến client
@@ -79,9 +70,7 @@ io.on('connection', (soc) => {
   // Thêm khách hàng mới khi kết nối
   soc.on('add_user', (customerId, userInfo) => {
     addUser(customerId, soc.id, userInfo)
-    io.emit('activeSeller', allSellers) // Gửi danh sách người bán đang hoạt động
     io.emit('activeCustomer', allCustomers) // Gửi danh sách khách hàng đang hoạt động
-    //console.log('List Seller:', allSellers)
   })
 
   // Thêm người bán mới khi kết nối
@@ -89,14 +78,15 @@ io.on('connection', (soc) => {
     //console.log(sellerId, userInfo)
     addSeller(sellerId, soc.id, userInfo)
     io.emit('activeSeller', allSellers) // Gửi danh sách người bán đang hoạt động
-    io.emit('activeCustomer', allCustomers) // Gửi danh sách khách hàng đang hoạt động
-    //console.log('List customer:', allCustomers)
   })
 
   // Thêm admin mới khi kết nối
-  soc.on('add_admin', (adminId, userInfo) => {
-    addAdmin(adminId, soc.id, userInfo)
-    //console.log('list admin:', allAdmins)
+  soc.on('add_admin', (adminInfo) => {
+    delete adminInfo.email
+    delete adminInfo.password
+    admin = adminInfo
+    admin.socketId = soc.id
+    io.emit('activeSeller', allSellers)
   })
 
   // Người bán gửi tin nhắn đến khách hàng
@@ -116,6 +106,21 @@ io.on('connection', (soc) => {
     }
   })
 
+  // Admin gửi tin nhắn đến Seller
+  soc.on('admin_send_message_seller', (msg) => {
+    //console.log(msg)
+    const seller = findSeller(msg.receiverId)
+    if (seller) {
+      io.to(seller.socketId).emit('admin_send_message_seller', msg)
+    }
+  })
+
+  // Seller gửi tin nhắn đến Admin
+  soc.on('seller_send_message_admin', (msg) => {
+    if (admin.socketId) {
+      io.to(admin.socketId).emit('seller_send_message_admin', msg)
+    }
+  })
   // Xử lý sự kiện ngắt kết nối của socket
   soc.on('disconnect', () => {
     remove(soc.id) // Xóa socket khỏi danh sách
