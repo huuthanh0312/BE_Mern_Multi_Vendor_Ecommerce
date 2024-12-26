@@ -1,41 +1,40 @@
-const formidable = require('formidable')
 const { responseReturn } = require('../../utils/response')
-const cloudinary = require('cloudinary').v2
-const sellerModel = require('../../models/sellerModel');
-const { cloudinaryConfig } = require('../../utils/cloudinaryConfig');
+const sellerModel = require('../../models/sellerModel')
 
 class sellerController {
-
   //@desc  Fetch get sellers
-  //@route POST /api/sellers
+  //@route GET /api/sellers
   //@access private
   getSellers = async (req, res) => {
     const { page, parPage, searchValue } = req.query
-
     try {
       let skipPage = ''
       if (parPage && page) {
         skipPage = parseInt(parPage) * (parseInt(page) - 1)
       }
       if (searchValue && page && parPage) {
-        const sellers = await sellerModel.find({ name: { $regex: `${searchValue}`, $options: 'i' }, status: 'pending' }).skip(skipPage).limit(parPage).sort({ createdAt: - 1 })
-        const totalSeller = await sellerModel.find({ name: { $regex: `${searchValue}`, $options: 'i' }, status: 'pending' }).countDocuments
+        const sellers = await sellerModel
+          .find({ $text: { $search: `${searchValue}` }, status: 'pending' })
+          .skip(skipPage)
+          .limit(parPage)
+          .sort({ createdAt: -1 })
+        const totalSeller = await sellerModel.find({
+          $text: { $search: `${searchValue}` },
+          status: 'pending'
+        }).countDocuments
         responseReturn(res, 200, { sellers, totalSeller })
-
       } else if (searchValue == '' && page && parPage) {
-        const sellers = await sellerModel.find({ status: 'pending' }).skip(skipPage).limit(parPage).sort({ createdAt: - 1 })
+        const sellers = await sellerModel
+          .find({ status: 'pending' })
+          .skip(skipPage)
+          .limit(parPage)
+          .sort({ createdAt: -1 })
         const totalSeller = await sellerModel.find({ status: 'pending' }).countDocuments()
-        responseReturn(res, 200, { sellers, totalSeller })
-
-      } else {
-        const sellers = await sellerModel.find({ status: 'pending' }).sort({ createdAt: - 1 })
-        const totalSeller = await sellerModel.find({}).countDocuments()
         responseReturn(res, 200, { sellers, totalSeller })
       }
     } catch (error) {
       responseReturn(res, 500, { error: error.message })
     }
-
   }
   //end method
 
@@ -54,7 +53,6 @@ class sellerController {
     //end method
   }
 
-
   //@desc  Fetch update status seller by id
   //@route get /api/sellers/update-status
   //@access private
@@ -71,7 +69,82 @@ class sellerController {
       responseReturn(res, 500, { error: error.message })
     }
     //end method
-
   }
+
+  //@desc  Fetch get sellers
+  //@route GET /api/sellers/active?page=searchValue=parPage=
+  //@access private
+  getActiveSellers = async (req, res) => {
+    let { page, searchValue, parPage } = req.query
+    //console.log(req.query)
+    try {
+      let skipPage = ''
+      if (parPage && page) {
+        skipPage = parseInt(parPage) * (parseInt(page) - 1)
+      }
+      if (searchValue == '' && page && parPage) {
+        const sellers = await sellerModel
+          .find({ status: 'active' })
+          .skip(skipPage)
+          .limit(parPage)
+          .sort({ createdAt: -1 })
+        // Đếm tổng số sellers phù hợp
+        const totalSeller = await sellerModel.countDocuments({ status: 'active' })
+        responseReturn(res, 200, { sellers, totalSeller })
+      } else if (searchValue && page && parPage) {
+        const sellers = await sellerModel
+          .find({ $text: { $search: searchValue }, status: 'active' })
+          .skip(skipPage)
+          .limit(parPage)
+          .sort({ createdAt: -1 })
+        const totalSeller = await sellerModel.find({
+          $text: { $search: searchValue },
+          status: 'active'
+        }).countDocuments
+        responseReturn(res, 200, { sellers, totalSeller })
+      }
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
+
+  //@desc  Fetch get sellers
+  //@route GET /api/sellers/active?page=searchValue=parPage=
+  //@access private
+  getDeactiveSellers = async (req, res) => {
+    let { page, searchValue, parPage } = req.query
+    //console.log(req.query)
+    try {
+      let skipPage = ''
+      if (parPage && page) {
+        skipPage = parseInt(parPage) * (parseInt(page) - 1)
+      }
+      if (searchValue == '' && page && parPage) {
+        const sellers = await sellerModel
+          .find({ status: 'deactive' })
+          .skip(skipPage)
+          .limit(parPage)
+          .sort({ createdAt: -1 })
+        // Đếm tổng số sellers phù hợp
+        const totalSeller = await sellerModel.countDocuments({ status: 'deactive' })
+        responseReturn(res, 200, { sellers, totalSeller })
+      } else if (searchValue && page && parPage) {
+        const sellers = await sellerModel
+          .find({ $text: { $search: searchValue }, status: 'deactive' })
+          .skip(skipPage)
+          .limit(parPage)
+          .sort({ createdAt: -1 })
+        const totalSeller = await sellerModel.find({
+          $text: { $search: searchValue },
+          status: 'deactive'
+        }).countDocuments
+        responseReturn(res, 200, { sellers, totalSeller })
+      }
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  //end method
 }
 module.exports = new sellerController()

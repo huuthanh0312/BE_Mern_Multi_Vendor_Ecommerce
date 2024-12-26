@@ -1,7 +1,7 @@
 const adminModel = require('../models/adminModel')
 const bcrpty = require('bcrypt')
 const { createToken } = require('../utils/tokenCreate')
-const sellerModel = require('../models/sellerModel');
+const sellerModel = require('../models/sellerModel')
 const sellerCustomerModel = require('../models/chat/sellerCustomerModel')
 const { responseReturn } = require('../utils/response')
 const cloudinary = require('cloudinary').v2
@@ -9,12 +9,11 @@ const { cloudinaryConfig } = require('../utils/cloudinaryConfig')
 const formidable = require('formidable')
 
 class authControllers {
-
   //@desc  Fetch admin login
   //@route POST /api/admin-login
   //@access private
   admin_login = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password } = req.body
     //console.log(req.body)
     try {
       const admin = await adminModel.findOne({ email }).select('+password')
@@ -32,12 +31,12 @@ class authControllers {
           res.cookie('accessToken', token, {
             expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
           })
-          responseReturn(res, 200, { token, message: "Login Success" })
+          responseReturn(res, 200, { token, message: 'Login Success' })
         } else {
-          responseReturn(res, 404, { error: "Password Wrong" })
+          responseReturn(res, 404, { error: 'Password Wrong' })
         }
       } else {
-        responseReturn(res, 404, { error: "Email not Found" })
+        responseReturn(res, 404, { error: 'Email not Found' })
       }
     } catch (error) {
       // console.log(error.message)
@@ -46,22 +45,24 @@ class authControllers {
   }
   //end method
 
-
   //@desc  Fetch seller register
   //@route POST /api/seller-register
   //@access private
   seller_register = async (req, res) => {
-    const { email, name, password } = req.body;
+    const { email, name, password } = req.body
     //console.log(req.body)
     try {
       const getUser = await sellerModel.findOne({ email })
       //console.log(getUser)
       if (getUser) {
-        return responseReturn(res, 404, { error: "Email Already Exit" })
-
+        return responseReturn(res, 404, { error: 'Email Already Exit' })
       } else {
         const seller = await sellerModel.create({
-          email, name, password: await bcrpty.hash(password, 10), method: 'menualy', shopInfo: {}
+          email,
+          name,
+          password: await bcrpty.hash(password, 10),
+          method: 'menualy',
+          shopInfo: {}
         })
         await sellerCustomerModel.create({
           myId: seller.id
@@ -77,8 +78,7 @@ class authControllers {
           sameSite: 'Strict', // Giúp ngăn chặn các cuộc tấn công CSRF
           expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         })
-        responseReturn(res, 201, { token, message: "Register Success" })
-
+        responseReturn(res, 201, { token, message: 'Register Success' })
       }
     } catch (error) {
       // console.log(error.message)
@@ -91,7 +91,7 @@ class authControllers {
   //@route POST /api/seller-login
   //@access private
   seller_login = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password } = req.body
     //console.log(req.body)
     try {
       const seller = await sellerModel.findOne({ email }).select('+password')
@@ -110,12 +110,12 @@ class authControllers {
             expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
           })
 
-          responseReturn(res, 200, { token, message: "Login Success" })
+          responseReturn(res, 200, { token, message: 'Login Success' })
         } else {
-          responseReturn(res, 404, { error: "Password Wrong" })
+          responseReturn(res, 404, { error: 'Password Wrong' })
         }
       } else {
-        responseReturn(res, 404, { error: "Email not Found" })
+        responseReturn(res, 404, { error: 'Email not Found' })
       }
     } catch (error) {
       // console.log(error.message)
@@ -141,6 +141,7 @@ class authControllers {
       responseReturn(res, 500, { error: 'Internal Server Error' })
     }
   }
+  // End Method
 
   //@desc  Fetch upload profile image
   //@route get /api/profile-image-upload
@@ -171,12 +172,11 @@ class authControllers {
       await sellerModel.findByIdAndUpdate(id, { image: result.url })
       const userInfo = await sellerModel.findById(id)
       responseReturn(res, 201, { userInfo, message: 'Profile Image Updated Successfully' })
-
     } catch (error) {
       responseReturn(res, 500, { error: error.message })
     }
-
   }
+  // End Method
 
   //@desc  Fetch Change profile seller info
   //@route get /api/seller/profile/info
@@ -187,7 +187,10 @@ class authControllers {
     try {
       await sellerModel.findByIdAndUpdate(id, {
         shopInfo: {
-          division, district, shopName, sub_district
+          division,
+          district,
+          shopName,
+          sub_district
         }
       })
       const userInfo = await sellerModel.findById(id)
@@ -196,5 +199,23 @@ class authControllers {
       responseReturn(res, 500, { error: error.message })
     }
   }
+  // End Method
+
+  //@desc logout
+  //@route get /api/logout
+  //@access private middleware
+  logout = async (req, res) => {
+    try {
+      res.cookie('accessToken', null, {
+        expires: new Date(Date.now()),
+        httpOnly: true
+      })
+      responseReturn(res, 200, { message: 'Logout Success' })
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message })
+    }
+  }
+  // End Method
 }
+
 module.exports = new authControllers()
