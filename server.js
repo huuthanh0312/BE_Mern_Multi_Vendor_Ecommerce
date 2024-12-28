@@ -125,9 +125,6 @@ io.on('connection', (soc) => {
   soc.on('disconnect', () => {
     remove(soc.id) // Xóa socket khỏi danh sách
     console.log('Client disconnected.')
-    // console.log('Sellers:', allSellers)
-    // console.log('Customers:', allCustomers)
-    // console.log('Admins:', allAdmins)
 
     // Phát lại danh sách người bán và khách hàng đang hoạt động
     io.emit('activeSeller', allSellers)
@@ -153,6 +150,7 @@ app.use('/api', require('./routes/authRoutes'))
 app.use('/api', require('./routes/dashboard/categoryRoutes'))
 app.use('/api', require('./routes/dashboard/productRoutes'))
 app.use('/api', require('./routes/dashboard/sellerRoutes'))
+app.use('/api', require('./routes/dashboard/orderRoutes'))
 
 const port = process.env.PORT || 8080
 dbConnect()
