@@ -151,6 +151,7 @@ app.use('/api', require('./routes/dashboard/categoryRoutes'))
 app.use('/api', require('./routes/dashboard/productRoutes'))
 app.use('/api', require('./routes/dashboard/sellerRoutes'))
 app.use('/api', require('./routes/dashboard/orderRoutes'))
+app.use('/api', require('./routes/paymentRoutes'))
 
 const port = process.env.PORT || 8080
 dbConnect()
